@@ -1,9 +1,11 @@
+import os.path
 import lstm
 import time
 import matplotlib.pyplot as plt
+from keras.models import load_model
 
 def plot_results(predicted_data, true_data):
-    fig = plt.figure(facecolor='white')
+    fig = plt.figure(facecolor='white', figsize=(14,7))
     ax = fig.add_subplot(111)
     ax.plot(true_data, label='True Data')
     plt.plot(predicted_data, label='Prediction')
@@ -11,7 +13,7 @@ def plot_results(predicted_data, true_data):
     plt.show()
 
 def plot_results_multiple(predicted_data, true_data, prediction_len):
-    fig = plt.figure(facecolor='white')
+    fig = plt.figure(facecolor='white', figsize=(14,7))
     ax = fig.add_subplot(111)
     ax.plot(true_data, label='True Data')
     #Pad the list of predictions to shift it in the graph to it's correct start
@@ -24,7 +26,7 @@ def plot_results_multiple(predicted_data, true_data, prediction_len):
 #Main Run Thread
 if __name__=='__main__':
 	global_start_time = time.time()
-	epochs  = 1
+	epochs  = 1000
 	seq_len = 50
 
 	print('> Loading data... ')
@@ -33,14 +35,18 @@ if __name__=='__main__':
 
 	print('> Data Loaded. Compiling...')
 
-	model = lstm.build_model([1, 50, 100, 1])
-
-	model.fit(
-	    X_train,
-	    y_train,
-	    batch_size=512,
-	    nb_epoch=epochs,
-	    validation_split=0.05)
+	model = None
+	if os.path.isfile('model.h5'):
+		model = load_model('model.h5')
+	else:
+		model = lstm.build_model([1, 50, 100, 1])
+		model.fit(
+			X_train,
+			y_train,
+			batch_size=512,
+			nb_epoch=epochs,
+			validation_split=0.05)
+		model.save('model.h5')
 
 	predictions = lstm.predict_sequences_multiple(model, X_test, seq_len, 50)
 	#predicted = lstm.predict_sequence_full(model, X_test, seq_len)
